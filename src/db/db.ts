@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import env from "../utils/env.js";
+import env from "../lib/utils/env.js";
 import mysql from "mysql2/promise";
 
 const DB_URL = env.DATABASE_URL;

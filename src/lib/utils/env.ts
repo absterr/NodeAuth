@@ -6,6 +6,7 @@ config({ path: ".env.local" });
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.url(),
+  APP_ORIGIN: z.url(),
 });
 
 const env = envSchema.parse(process.env);
