@@ -2,12 +2,38 @@
   "name": "nodeauth",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "./dist/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "node --watch ./dist/server.js",
+    "start": "node ./dist/server.js",
+    "push": "npx tsx ./src/db/sync.ts",
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.9.1",
+    "tsx": "^4.20.6"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "resend": "^6.2.2",
+    "sequelize": "^6.37.7",
+    "zod": "^4.1.12"
+  }
 }
