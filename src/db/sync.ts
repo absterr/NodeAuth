@@ -1,4 +1,5 @@
 import { sequelize } from "./db.js";
+import "./models/associations.js";
 
 (async () => {
   try {
