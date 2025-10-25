@@ -7,39 +7,39 @@ import {
 } from "sequelize";
 import { sequelize } from "../db.js";
 
-export class User extends Model<
-  InferAttributes<User>,
-  InferCreationAttributes<User>
+export class Account extends Model<
+  InferAttributes<Account>,
+  InferCreationAttributes<Account>
 > {
   declare id: CreationOptional<string>;
-  declare name: string;
-  declare email: string;
-  declare emailVerified: boolean;
+  declare accountId: CreationOptional<string | null>;
+  declare providerId: string;
+  declare userId: string;
+  declare password: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
 
-User.init(
+Account.init(
   {
     id: {
+      primaryKey: true,
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
-      primaryKey: true,
     },
-    name: {
+    accountId: {
+      type: DataTypes.STRING,
+    },
+    providerId: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    email: {
-      type: DataTypes.STRING,
+    userId: {
+      type: DataTypes.UUID,
       allowNull: false,
-      unique: true,
     },
-    emailVerified: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
+    password: {
+      type: DataTypes.STRING,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -52,8 +52,14 @@ User.init(
   },
   {
     sequelize,
-    modelName: "User",
-    tableName: "users",
+    modelName: "Account",
+    tableName: "accounts",
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["providerId", "accountId"],
+      },
+    ],
   }
 );
