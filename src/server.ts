@@ -19,7 +19,7 @@ app.use(
   })
 );
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/test", (req: Request, res: Response) => {
   res.status(OK).send("Hello world");
 });
 

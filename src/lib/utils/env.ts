@@ -4,9 +4,10 @@ import { z } from "zod";
 config({ path: ".env.local" });
 
 const envSchema = z.object({
+  NODE_ENV: z.string(),
   PORT: z.coerce.number().default(3000),
-  DATABASE_URL: z.url(),
   APP_ORIGIN: z.url(),
+  DATABASE_URL: z.url(),
 });
 
 const env = envSchema.parse(process.env);
