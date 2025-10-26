@@ -6,14 +6,23 @@ import {
   User,
   Verification,
 } from "../db/models/associations.js";
-import { oneDayFromNow, twoWeeksFromNow } from "../lib/date.js";
-import { EMAIL_VERIFICATION_TEMPLATE } from "../lib/emailTemplates.js";
+import {
+  fifteenMinsFromNow,
+  oneDayFromNow,
+  tenMinsAgo,
+  twoWeeksFromNow,
+} from "../lib/date.js";
+import {
+  EMAIL_VERIFICATION_TEMPLATE,
+  PASSWORD_RESET_TEMPLATE,
+} from "../lib/emailTemplates.js";
 import {
   BAD_REQUEST,
   CONFLICT,
   CREATED,
   NOT_FOUND,
   OK,
+  TOO_MANY_REQUEST,
   UNAUTHORIZED,
 } from "../lib/httpStatusCode.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
@@ -25,7 +34,13 @@ import {
   signUserToken,
   verifyUserToken,
 } from "../lib/utils/userToken.js";
-import { loginSchema, signupSchema, verifyEmailSchema } from "./auth.schema.js";
+import {
+  emailSchema,
+  loginSchema,
+  signupSchema,
+  verifyEmailSchema,
+} from "./auth.schema.js";
+import { Op } from "sequelize";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
@@ -76,19 +91,17 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
     userAgent: req.headers["user-agent"],
   });
 
-  await sequelize.transaction(async (t) => {
-    const record = await Verification.findOne({
-      where: { value: token },
-      transaction: t,
-      lock: t.LOCK.UPDATE,
+  const record = await Verification.findOne({
+    where: { value: token },
+  });
+  if (!record) {
+    return res.status(UNAUTHORIZED).json({
+      success: false,
+      message: "Invalid or expired token",
     });
-    if (!record) {
-      return res.status(UNAUTHORIZED).json({
-        success: false,
-        message: "Invalid or expired token",
-      });
-    }
+  }
 
+  await sequelize.transaction(async (t) => {
     const { id, userId } = await Session.create(
       {
         userId: record.userId,
@@ -161,6 +174,50 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
   });
 
   setAuthCookies({ res, accessToken, refreshToken }).status(CREATED);
+});
+
+export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
+  const { email } = emailSchema.parse({
+    ...req.body,
+  });
+  const foundUser = await User.findOne({ where: { email } });
+  if (!foundUser) {
+    return res.status(NOT_FOUND).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+  const count = await Verification.count({
+    where: {
+      userId: foundUser.id,
+      type: "password_reset",
+      expiresAt: { [Op.lt]: tenMinsAgo() },
+    },
+  });
+  if (count > 1) {
+    return res.send(TOO_MANY_REQUEST).json({
+      success: false,
+      message: "Too many requests. Try again later",
+    });
+  }
+
+  const { value } = await Verification.create({
+    userId: foundUser.id,
+    type: "password_reset",
+    expiresAt: fifteenMinsFromNow(),
+  });
+
+  await sendMail({
+    to: email,
+    subject: "Password reset",
+    template: PASSWORD_RESET_TEMPLATE,
+    value,
+  });
+
+  return res.status(CREATED).json({
+    success: true,
+    message: "Password reset email sent.",
+  });
 });
 
 export const logoutHandler = catchAsyncErrors(async (req, res) => {
