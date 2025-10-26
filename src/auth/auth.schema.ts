@@ -50,6 +50,9 @@ export const emailSchema = object({
 export const resetPasswordSchema = object({
   password: getPasswordSchema(),
   confirmPassword: getConfirmPasswordSchema(),
+  token: string({ error: "Missing token" })
+    .min(64, "Invalid token")
+    .max(64, "Invalid token"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],

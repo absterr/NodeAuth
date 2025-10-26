@@ -37,6 +37,7 @@ import {
 import {
   emailSchema,
   loginSchema,
+  resetPasswordSchema,
   signupSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
@@ -46,9 +47,7 @@ const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 
 export const signupHandler = catchAsyncErrors(async (req, res) => {
-  const { email, name, password } = signupSchema.parse({
-    ...req.body,
-  });
+  const { email, name, password } = signupSchema.parse(req.body);
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
     return res.status(CONFLICT).json({
@@ -135,6 +134,7 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
 export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
   const { email, password, userAgent } = loginSchema.parse({
     ...req.body,
+    userAgent: req.headers["user-agent"],
   });
   const foundUser = await User.findOne({ where: { email } });
   if (!foundUser) {
@@ -177,9 +177,7 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
 });
 
 export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
-  const { email } = emailSchema.parse({
-    ...req.body,
-  });
+  const { email } = emailSchema.parse(req.body);
   const foundUser = await User.findOne({ where: { email } });
   if (!foundUser) {
     return res.status(NOT_FOUND).json({
@@ -217,6 +215,37 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
   return res.status(CREATED).json({
     success: true,
     message: "Password reset email sent.",
+  });
+});
+
+export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
+  const { password, token } = await resetPasswordSchema.parse({
+    ...req.body,
+    token: req.query.token,
+  });
+
+  const validToken = await Verification.findOne({ where: { value: token } });
+  if (!validToken) {
+    return res.status(UNAUTHORIZED).json({
+      success: false,
+      message: "Invalid or expired token.",
+    });
+  }
+
+  await sequelize.transaction(async (t) => {
+    await Account.update(
+      { password },
+      { where: { userId: validToken.userId }, transaction: t }
+    );
+    await Session.destroy({
+      where: { userId: validToken.userId },
+      transaction: t,
+    });
+    await validToken.destroy({ transaction: t });
+  });
+  clearAuthCookies(res).status(OK).json({
+    success: true,
+    message: "Password reset successful",
   });
 });
 
