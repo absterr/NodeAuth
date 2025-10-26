@@ -228,10 +228,12 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   const userRefreshToken = req.cookies.refreshToken as string | undefined;
   appAssert(userRefreshToken, UNAUTHORIZED, "Invalid refresh token");
 
-  const payload = verifyUserToken<RefreshTokenPayload>({
+  const { payload } = verifyUserToken<RefreshTokenPayload>({
     token: userRefreshToken,
     secret: REFRESH_SECRET,
   });
+  appAssert(payload, UNAUTHORIZED, "Invalid refresh token");
+
   const now = Date.now();
   const validSession = await Session.findOne({
     where: { id: payload.sessionId, expiresAt: { [Op.gt]: now } },
@@ -267,10 +269,12 @@ export const logoutHandler = catchAsyncErrors(async (req, res) => {
   const accessToken = req.cookies.accessToken as string | undefined;
   appAssert(accessToken, UNAUTHORIZED, "Invalid access token");
 
-  const payload = verifyUserToken<AccessTokenPayload>({
+  const { payload } = verifyUserToken<AccessTokenPayload>({
     token: accessToken,
     secret: ACCESS_SECRET,
   });
+  appAssert(payload, UNAUTHORIZED, "Invalid access token");
+
   await Session.destroy({ where: { id: payload.sessionId } });
   clearAuthCookies(res).status(OK).json({
     success: true,

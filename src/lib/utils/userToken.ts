@@ -30,10 +30,14 @@ export const verifyUserToken = <T extends object>({
   options?: VerifyOptions;
   secret: string;
 }) => {
-  const payload = jwt.verify(token, secret, {
-    ...options,
-    audience: ["user"],
-  }) as T;
+  try {
+    const payload = jwt.verify(token, secret, {
+      ...options,
+      audience: ["user"],
+    }) as T;
 
-  return payload;
+    return { payload };
+  } catch (error) {
+    return { error };
+  }
 };
