@@ -8,6 +8,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   APP_ORIGIN: z.url(),
   DATABASE_URL: z.url(),
+  EMAIL_FROM: z.string(),
+  RESEND_API_KEY: z.string(),
+  SALT_ROUNDS: z.number().default(10),
 });
 
 const env = envSchema.parse(process.env);

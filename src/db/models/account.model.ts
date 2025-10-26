@@ -6,6 +6,8 @@ import {
   CreationOptional,
 } from "sequelize";
 import { sequelize } from "../db.js";
+import bcrypt from "bcrypt";
+import env from "../../lib/utils/env.js";
 
 export class Account extends Model<
   InferAttributes<Account>,
@@ -18,6 +20,11 @@ export class Account extends Model<
   declare password: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+
+  async validPassword(password: string): Promise<boolean | null> {
+    if (!this.password) return null;
+    return bcrypt.compare(password, this.password);
+  }
 }
 
 Account.init(
@@ -61,5 +68,20 @@ Account.init(
         fields: ["providerId", "accountId"],
       },
     ],
+    hooks: {
+      async beforeCreate(account) {
+        if (account.password) {
+          const salt = await bcrypt.genSalt(env.SALT_ROUNDS);
+          account.password = await bcrypt.hash(account.password, salt);
+        }
+      },
+
+      async beforeUpdate(account) {
+        if (account.password && account.changed("password")) {
+          const salt = await bcrypt.genSalt(env.SALT_ROUNDS);
+          account.password = await bcrypt.hash(account.password, salt);
+        }
+      },
+    },
   }
 );

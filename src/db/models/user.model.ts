@@ -14,7 +14,7 @@ export class User extends Model<
   declare id: CreationOptional<string>;
   declare name: string;
   declare email: string;
-  declare emailVerified: boolean;
+  declare emailVerified: CreationOptional<boolean>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }

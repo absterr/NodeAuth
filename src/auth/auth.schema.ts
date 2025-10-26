@@ -25,7 +25,6 @@ export const signupSchema = object({
   email: getEmailSchema(),
   password: getPasswordSchema(),
   confirmPassword: getConfirmPasswordSchema(),
-  userAgent: getUserAgent(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
