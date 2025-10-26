@@ -30,14 +30,17 @@ export const signupSchema = object({
   path: ["confirmPassword"],
 });
 
+export const verifyEmailSchema = object({
+  token: string({ error: "Missing token" })
+    .min(64, "Invalid token")
+    .max(64, "Invalid token"),
+  userAgent: getUserAgent(),
+});
+
 export const loginSchema = object({
   email: getEmailSchema(),
   password: getPasswordSchema(),
   userAgent: getUserAgent(),
-});
-
-export const nameSchema = object({
-  name: getNameSchema(),
 });
 
 export const emailSchema = object({

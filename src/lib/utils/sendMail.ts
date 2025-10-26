@@ -19,7 +19,7 @@ const sendMail = async ({ to, subject, template, value }: Params) => {
       from: env.EMAIL_FROM,
       to: to.toLowerCase().trim(),
       subject: subject.trim(),
-      html: template.replace("{{URL}}", url),
+      html: template.replace("{URL}", url),
     });
     if (error) {
       return response.status(INTERNAL_SERVER_ERROR).json({

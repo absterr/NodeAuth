@@ -51,7 +51,7 @@ export const EMAIL_VERIFICATION_TEMPLATE = `
         </p>
         <p>Click the button below to verify your email address:</p>
         <a
-          href="{{URL}}"
+          href="{URL}"
           style="
             background-color: #000;
             color: #fff;

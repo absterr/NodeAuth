@@ -47,6 +47,7 @@ Verification.init(
     },
     value: {
       type: DataTypes.STRING,
+      unique: true,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -69,7 +70,7 @@ Verification.init(
     hooks: {
       beforeCreate: (verification) => {
         if (!verification.value)
-          verification.value = randomBytes(20).toString("hex");
+          verification.value = randomBytes(32).toString("hex");
       },
     },
   }

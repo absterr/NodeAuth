@@ -11,6 +11,8 @@ const envSchema = z.object({
   EMAIL_FROM: z.string(),
   RESEND_API_KEY: z.string(),
   SALT_ROUNDS: z.number().default(10),
+  JWT_ACCESS_SECRET: z.string(),
+  JWT_REFRESH_SECRET: z.string(),
 });
 
 const env = envSchema.parse(process.env);
