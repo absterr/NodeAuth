@@ -1,11 +1,19 @@
 import { sequelize } from "../db/db.js";
-import { Account, User, Verification } from "../db/models/associations.js";
-import { oneDayFromNow } from "../lib/date.js";
+import {
+  Account,
+  Session,
+  User,
+  Verification,
+} from "../db/models/associations.js";
+import { oneDayFromNow, twoWeeksFromNow } from "../lib/date.js";
 import { EMAIL_VERIFICATION_TEMPLATE } from "../lib/emailTemplates.js";
 import { CONFLICT, CREATED, UNAUTHORIZED } from "../lib/httpStatusCode.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
+import { setAuthCookies } from "../lib/utils/cookies.js";
+import env from "../lib/utils/env.js";
 import sendMail from "../lib/utils/sendMail.js";
-import { signupSchema, verifyEmailSchema } from "./auth.schema.js";
+import { signUserToken } from "../lib/utils/userToken.js";
+import { loginSchema, signupSchema, verifyEmailSchema } from "./auth.schema.js";
 
 export const signupHandler = catchAsyncErrors(async (req, res) => {
   const { email, name, password } = signupSchema.parse({
@@ -48,6 +56,9 @@ export const signupHandler = catchAsyncErrors(async (req, res) => {
 });
 
 export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
+  const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
+  const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
+
   const { token, userAgent } = verifyEmailSchema.parse({
     token: req.query.token,
     userAgent: req.headers["user-agent"],
@@ -60,4 +71,22 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
       message: "Invalid or expired token",
     });
   }
+
+  const { id, userId } = await Session.create({
+    userId: record.userId,
+    userAgent,
+    expiresAt: twoWeeksFromNow(),
+  });
+  const accessToken = signUserToken({
+    payload: { userId: userId, sessionId: id },
+    options: { expiresIn: "15m" },
+    secret: ACCESS_SECRET,
+  });
+  const refreshToken = signUserToken({
+    payload: { sessionId: id },
+    options: { expiresIn: "14d" },
+    secret: REFRESH_SECRET,
+  });
+
+  setAuthCookies({ res, accessToken, refreshToken }).status(CREATED);
 });
