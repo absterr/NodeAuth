@@ -63,8 +63,7 @@ export const EMAIL_VERIFICATION_TEMPLATE = `
             margin-bottom: 5px;
             font-weight: bold;
           "
-          >Verify email</a
-        >
+          >Verify email</a>
         <p>This link will expire in 15 minutes for security reasons.</p>
         <p>
           Best regards,<br />

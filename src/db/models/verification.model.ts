@@ -47,7 +47,6 @@ Verification.init(
     },
     value: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,

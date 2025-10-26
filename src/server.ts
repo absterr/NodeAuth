@@ -5,6 +5,7 @@ import { connectToDatabase } from "./db/db.js";
 import { OK } from "./lib/httpStatusCode.js";
 import env from "./lib/utils/env.js";
 import errorHander from "./middleware/errorHandler.js";
+import authRoutes from "./auth/auth.route.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -22,6 +23,8 @@ app.use(
 app.get("/test", (req: Request, res: Response) => {
   res.status(OK).send("Hello world");
 });
+
+app.use("/auth", authRoutes);
 
 app.use(errorHander);
 

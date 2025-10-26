@@ -1,3 +1,4 @@
+import { sequelize } from "../db/db.js";
 import { Account, User, Verification } from "../db/models/associations.js";
 import { oneDayFromNow } from "../lib/date.js";
 import { EMAIL_VERIFICATION_TEMPLATE } from "../lib/emailTemplates.js";
@@ -19,18 +20,26 @@ export const signupHandler = catchAsyncErrors(async (req, res) => {
     });
   }
 
-  const { id } = await User.create({ name, email });
-  await Account.create({ providerId: "credential", userId: id, password });
-  const { value } = await Verification.create({
-    userId: id,
-    type: "email_verification",
-    expiresAt: oneDayFromNow(),
-  });
-  await sendMail({
-    to: email,
-    subject: "Email verification",
-    template: EMAIL_VERIFICATION_TEMPLATE,
-    value,
+  await sequelize.transaction(async (t) => {
+    const { id } = await User.create({ name, email }, { transaction: t });
+    await Account.create(
+      { providerId: "credential", userId: id, password },
+      { transaction: t }
+    );
+    const { value } = await Verification.create(
+      {
+        userId: id,
+        type: "email_verification",
+        expiresAt: oneDayFromNow(),
+      },
+      { transaction: t }
+    );
+    await sendMail({
+      to: email,
+      subject: "Email verification",
+      template: EMAIL_VERIFICATION_TEMPLATE,
+      value,
+    });
   });
 
   return res.status(CREATED).json({
