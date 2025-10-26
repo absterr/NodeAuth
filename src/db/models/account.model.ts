@@ -9,6 +9,8 @@ import { sequelize } from "../db.js";
 import bcrypt from "bcrypt";
 import env from "../../lib/utils/env.js";
 
+const credential = "credential";
+
 export class Account extends Model<
   InferAttributes<Account>,
   InferCreationAttributes<Account>
@@ -69,17 +71,22 @@ Account.init(
       },
     ],
     hooks: {
-      async beforeCreate(account) {
+      async beforeSave(account) {
+        if (account.providerId === credential && !account.password) {
+          throw new Error("Password is required for credential provider");
+        }
         if (account.password) {
           const salt = await bcrypt.genSalt(env.SALT_ROUNDS);
           account.password = await bcrypt.hash(account.password, salt);
         }
       },
-
-      async beforeUpdate(account) {
-        if (account.password && account.changed("password")) {
-          const salt = await bcrypt.genSalt(env.SALT_ROUNDS);
-          account.password = await bcrypt.hash(account.password, salt);
+    },
+    validate: {
+      credentialRequiresPassword() {
+        if (this.providerId === credential && !this.password) {
+          throw new Error(
+            "Password is required when providerId is 'credential'"
+          );
         }
       },
     },
