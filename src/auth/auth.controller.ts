@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 import { sequelize } from "../db/db.js";
 import {
   Account,
@@ -8,6 +9,7 @@ import {
 } from "../db/models/associations.js";
 import {
   fifteenMinsFromNow,
+  oneDay,
   oneDayFromNow,
   tenMinsAgo,
   twoWeeksFromNow,
@@ -26,11 +28,16 @@ import {
   UNAUTHORIZED,
 } from "../lib/httpStatusCode.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
-import { clearAuthCookies, setAuthCookies } from "../lib/utils/cookies.js";
+import {
+  clearAuthCookies,
+  refreshAuthCookies,
+  setAuthCookies,
+} from "../lib/utils/cookies.js";
 import env from "../lib/utils/env.js";
 import sendMail from "../lib/utils/sendMail.js";
 import {
   AccessTokenPayload,
+  RefreshTokenPayload,
   signUserToken,
   verifyUserToken,
 } from "../lib/utils/userToken.js";
@@ -41,7 +48,6 @@ import {
   signupSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
-import { Op } from "sequelize";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
@@ -249,12 +255,61 @@ export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
   });
 });
 
+export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
+  const userRefreshToken = req.cookies.refreshToken as string | undefined;
+  if (!userRefreshToken) {
+    return res.status(UNAUTHORIZED).json({
+      success: false,
+      message: "Invalid refresh token",
+    });
+  }
+
+  const payload = verifyUserToken<RefreshTokenPayload>({
+    token: userRefreshToken,
+    secret: REFRESH_SECRET,
+  });
+  const now = Date.now();
+  const validSession = await Session.findOne({
+    where: { id: payload.sessionId, expiresAt: { [Op.gt]: now } },
+  });
+  if (!validSession) {
+    return res.status(UNAUTHORIZED).json({
+      success: false,
+      message: "Session expired",
+    });
+  }
+
+  const willExpireSoon = validSession.expiresAt.getTime() - now <= oneDay;
+  if (willExpireSoon) {
+    validSession.expiresAt = twoWeeksFromNow();
+    await validSession.save();
+  }
+
+  const newRefreshToken = willExpireSoon
+    ? signUserToken({
+        payload: { sessionId: validSession.id },
+        options: { expiresIn: "14d" },
+        secret: REFRESH_SECRET,
+      })
+    : undefined;
+
+  const newAccessToken = signUserToken({
+    payload: { userId: validSession.userId, sessionId: validSession.id },
+    options: { expiresIn: "15m" },
+    secret: ACCESS_SECRET,
+  });
+
+  refreshAuthCookies({ res, newRefreshToken, newAccessToken }).status(OK).json({
+    message: "Refreshed token",
+  });
+});
+
 export const logoutHandler = catchAsyncErrors(async (req, res) => {
   const accessToken = req.cookies.accessToken as string | undefined;
   if (!accessToken) {
     return res.status(UNAUTHORIZED).json({
       success: false,
-      message: "Invalid token",
+      message: "Invalid access token",
     });
   }
 
