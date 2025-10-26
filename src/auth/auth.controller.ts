@@ -13,13 +13,18 @@ import {
   CONFLICT,
   CREATED,
   NOT_FOUND,
+  OK,
   UNAUTHORIZED,
 } from "../lib/httpStatusCode.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
-import { setAuthCookies } from "../lib/utils/cookies.js";
+import { clearAuthCookies, setAuthCookies } from "../lib/utils/cookies.js";
 import env from "../lib/utils/env.js";
 import sendMail from "../lib/utils/sendMail.js";
-import { signUserToken } from "../lib/utils/userToken.js";
+import {
+  AccessTokenPayload,
+  signUserToken,
+  verifyUserToken,
+} from "../lib/utils/userToken.js";
 import { loginSchema, signupSchema, verifyEmailSchema } from "./auth.schema.js";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
@@ -156,4 +161,24 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
   });
 
   setAuthCookies({ res, accessToken, refreshToken }).status(CREATED);
+});
+
+export const logoutHandler = catchAsyncErrors(async (req, res) => {
+  const accessToken = req.cookies.accessToken as string | undefined;
+  if (!accessToken) {
+    return res.status(UNAUTHORIZED).json({
+      success: false,
+      message: "Invalid token",
+    });
+  }
+
+  const payload = verifyUserToken<AccessTokenPayload>({
+    token: accessToken,
+    secret: ACCESS_SECRET,
+  });
+  await Session.destroy({ where: { id: payload.sessionId } });
+  clearAuthCookies(res).status(OK).json({
+    success: true,
+    message: "Logout successful",
+  });
 });

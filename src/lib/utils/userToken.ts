@@ -27,7 +27,7 @@ export const verifyUserToken = <T extends object>({
   secret,
 }: {
   token: string;
-  options: VerifyOptions;
+  options?: VerifyOptions;
   secret: string;
 }) => {
   const payload = jwt.verify(token, secret, {

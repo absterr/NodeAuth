@@ -58,3 +58,9 @@ export const refreshAuthCookies = ({
     expires: fifteenMinsFromNow(),
   });
 };
+
+export const clearAuthCookies = (res: Response) => {
+  return res
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken", { path: REFRESH_PATH });
+};
