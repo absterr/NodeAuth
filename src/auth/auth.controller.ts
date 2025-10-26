@@ -48,6 +48,7 @@ import {
   signupSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
+import appAssert from "../lib/utils/appAssert.js";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
@@ -55,12 +56,7 @@ const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 export const signupHandler = catchAsyncErrors(async (req, res) => {
   const { email, name, password } = signupSchema.parse(req.body);
   const existingUser = await User.findOne({ where: { email } });
-  if (existingUser) {
-    return res.status(CONFLICT).json({
-      success: false,
-      message: "A user with this email already exists",
-    });
-  }
+  appAssert(existingUser, CONFLICT, "A user with this email already exists");
 
   await sequelize.transaction(async (t) => {
     const { id } = await User.create({ name, email }, { transaction: t });
@@ -99,12 +95,7 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
   const record = await Verification.findOne({
     where: { value: token },
   });
-  if (!record) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
-  }
+  appAssert(record, UNAUTHORIZED, "Invalid or expired token");
 
   await sequelize.transaction(async (t) => {
     const { id, userId } = await Session.create(
@@ -143,26 +134,18 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
     userAgent: req.headers["user-agent"],
   });
   const foundUser = await User.findOne({ where: { email } });
-  if (!foundUser) {
-    return res.status(NOT_FOUND).json({
-      success: false,
-      message: "User not found",
-    });
-  }
+  appAssert(foundUser, NOT_FOUND, "User not found");
+
   const account = await Account.findOne({ where: { userId: foundUser.id } });
-  if (!account || !account.password) {
-    return res.status(BAD_REQUEST).json({
-      success: false,
-      message: "This user does not have a credential account",
-    });
-  }
+  appAssert(
+    account && account.password,
+    BAD_REQUEST,
+    "This user does not have a credential account"
+  );
+
   const isCorrect = await bcrypt.compare(password, account.password);
-  if (!isCorrect) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Invalid email or password",
-    });
-  }
+  appAssert(isCorrect, UNAUTHORIZED, "Invalid email or password");
+
   const { id, userId } = await Session.create({
     userId: account.userId,
     userAgent,
@@ -185,12 +168,8 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
 export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
   const { email } = emailSchema.parse(req.body);
   const foundUser = await User.findOne({ where: { email } });
-  if (!foundUser) {
-    return res.status(NOT_FOUND).json({
-      success: false,
-      message: "User not found",
-    });
-  }
+  appAssert(foundUser, NOT_FOUND, "User not found");
+
   const count = await Verification.count({
     where: {
       userId: foundUser.id,
@@ -198,12 +177,7 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
       expiresAt: { [Op.lt]: tenMinsAgo() },
     },
   });
-  if (count > 1) {
-    return res.send(TOO_MANY_REQUEST).json({
-      success: false,
-      message: "Too many requests. Try again later",
-    });
-  }
+  appAssert(count <= 1, TOO_MANY_REQUEST, "Too many requests. Try again later");
 
   const { value } = await Verification.create({
     userId: foundUser.id,
@@ -231,12 +205,7 @@ export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
   });
 
   const validToken = await Verification.findOne({ where: { value: token } });
-  if (!validToken) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Invalid or expired token.",
-    });
-  }
+  appAssert(validToken, UNAUTHORIZED, "Invalid or expired token.");
 
   await sequelize.transaction(async (t) => {
     await Account.update(
@@ -257,12 +226,7 @@ export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
 
 export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   const userRefreshToken = req.cookies.refreshToken as string | undefined;
-  if (!userRefreshToken) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Invalid refresh token",
-    });
-  }
+  appAssert(userRefreshToken, UNAUTHORIZED, "Invalid refresh token");
 
   const payload = verifyUserToken<RefreshTokenPayload>({
     token: userRefreshToken,
@@ -272,12 +236,7 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   const validSession = await Session.findOne({
     where: { id: payload.sessionId, expiresAt: { [Op.gt]: now } },
   });
-  if (!validSession) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Session expired",
-    });
-  }
+  appAssert(validSession, UNAUTHORIZED, "Session expired");
 
   const willExpireSoon = validSession.expiresAt.getTime() - now <= oneDay;
   if (willExpireSoon) {
@@ -306,12 +265,7 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
 
 export const logoutHandler = catchAsyncErrors(async (req, res) => {
   const accessToken = req.cookies.accessToken as string | undefined;
-  if (!accessToken) {
-    return res.status(UNAUTHORIZED).json({
-      success: false,
-      message: "Invalid access token",
-    });
-  }
+  appAssert(accessToken, UNAUTHORIZED, "Invalid access token");
 
   const payload = verifyUserToken<AccessTokenPayload>({
     token: accessToken,
