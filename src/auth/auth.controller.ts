@@ -124,7 +124,10 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
       secret: REFRESH_SECRET,
     });
 
-    setAuthCookies({ res, accessToken, refreshToken }).status(CREATED);
+    setAuthCookies({ res, accessToken, refreshToken }).status(CREATED).json({
+      success: true,
+      message: "Email verified",
+    });
   });
 });
 
@@ -162,7 +165,10 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
     secret: REFRESH_SECRET,
   });
 
-  setAuthCookies({ res, accessToken, refreshToken }).status(CREATED);
+  setAuthCookies({ res, accessToken, refreshToken }).status(CREATED).json({
+    success: true,
+    message: "Login successful",
+  });
 });
 
 export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
