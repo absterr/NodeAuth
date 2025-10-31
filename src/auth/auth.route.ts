@@ -5,6 +5,7 @@ import {
   logoutHandler,
   refreshTokenHandler,
   resetPasswordHandler,
+  resetPasswordTokenHandler,
   signupHandler,
   verifyEmailHandler,
 } from "./auth.controller.js";
@@ -15,6 +16,7 @@ authRoutes.post("/signup", signupHandler);
 authRoutes.post("/email/verify", verifyEmailHandler);
 authRoutes.post("/login", credentialLoginHandler);
 authRoutes.post("/password/forgot", forgotPasswordHandler);
+authRoutes.get("/password/reset", resetPasswordTokenHandler);
 authRoutes.post("/password/reset", resetPasswordHandler);
 authRoutes.post("/refresh", refreshTokenHandler);
 authRoutes.get("/logout", logoutHandler);

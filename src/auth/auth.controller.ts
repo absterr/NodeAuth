@@ -46,6 +46,7 @@ import {
   loginSchema,
   resetPasswordSchema,
   signupSchema,
+  tokenSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
 import appAssert from "../lib/utils/appAssert.js";
@@ -94,7 +95,7 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
   });
 
   const record = await Verification.findOne({
-    where: { value: token },
+    where: { value: token, expiresAt: { [Op.gt]: new Date() } },
   });
   appAssert(record, UNAUTHORIZED, "Invalid or expired token");
 
@@ -205,13 +206,31 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
   });
 });
 
+export const resetPasswordTokenHandler = catchAsyncErrors(async (req, res) => {
+  const { token } = await tokenSchema.parse({
+    token: req.query.token,
+  });
+
+  const validToken = await Verification.findOne({
+    where: { value: token, expiresAt: { [Op.gt]: new Date() } },
+  });
+  appAssert(validToken, UNAUTHORIZED, "Invalid or expired token.");
+
+  return res.status(OK).json({
+    success: true,
+    message: "Password change verified",
+  });
+});
+
 export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
   const { password, token } = await resetPasswordSchema.parse({
     ...req.body,
     token: req.query.token,
   });
 
-  const validToken = await Verification.findOne({ where: { value: token } });
+  const validToken = await Verification.findOne({
+    where: { value: token, expiresAt: { [Op.gt]: new Date() } },
+  });
   appAssert(validToken, UNAUTHORIZED, "Invalid or expired token.");
 
   await sequelize.transaction(async (t) => {
@@ -241,12 +260,12 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   });
   appAssert(payload, UNAUTHORIZED, "Invalid refresh token");
 
-  const now = Date.now();
   const validSession = await Session.findOne({
-    where: { id: payload.sessionId, expiresAt: { [Op.gt]: now } },
+    where: { id: payload.sessionId, expiresAt: { [Op.gt]: new Date() } },
   });
   appAssert(validSession, UNAUTHORIZED, "Session expired");
 
+  const now = Date.now();
   const willExpireSoon = validSession.expiresAt.getTime() - now <= oneDay;
   if (willExpireSoon) {
     validSession.expiresAt = twoWeeksFromNow();

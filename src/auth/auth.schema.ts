@@ -18,6 +18,11 @@ const getConfirmPasswordSchema = () =>
     .min(8, "Must contain at least 8 characters")
     .max(32, "Must not exceed 32 characters");
 
+const getUserToken = () =>
+  string({ error: "Missing token" })
+    .min(64, "Invalid token")
+    .max(64, "Invalid token");
+
 const getUserAgent = () => string().optional();
 
 export const signupSchema = object({
@@ -31,9 +36,7 @@ export const signupSchema = object({
 });
 
 export const verifyEmailSchema = object({
-  token: string({ error: "Missing token" })
-    .min(64, "Invalid token")
-    .max(64, "Invalid token"),
+  token: getUserToken(),
   userAgent: getUserAgent(),
 });
 
@@ -47,12 +50,14 @@ export const emailSchema = object({
   email: getEmailSchema(),
 });
 
+export const tokenSchema = object({
+  token: getUserToken(),
+});
+
 export const resetPasswordSchema = object({
   password: getPasswordSchema(),
   confirmPassword: getConfirmPasswordSchema(),
-  token: string({ error: "Missing token" })
-    .min(64, "Invalid token")
-    .max(64, "Invalid token"),
+  token: getUserToken(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
