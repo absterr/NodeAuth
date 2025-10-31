@@ -1,4 +1,4 @@
-import { assert } from "node:console";
+import assert from "assert";
 import AppError, { AppErrorCode } from "../AppError.js";
 import httpStatusCode from "../httpStatusCode.js";
 

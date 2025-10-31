@@ -139,7 +139,7 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
     userAgent: req.headers["user-agent"],
   });
   const foundUser = await User.findOne({ where: { email } });
-  appAssert(foundUser, NOT_FOUND, "User not found");
+  appAssert(foundUser, NOT_FOUND, "Invalid email or password");
 
   const account = await Account.findOne({ where: { userId: foundUser.id } });
   appAssert(
@@ -176,7 +176,7 @@ export const credentialLoginHandler = catchAsyncErrors(async (req, res) => {
 export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
   const { email } = emailSchema.parse(req.body);
   const foundUser = await User.findOne({ where: { email } });
-  appAssert(foundUser, NOT_FOUND, "User not found");
+  appAssert(foundUser, NOT_FOUND, "Invalid email");
 
   const count = await Verification.count({
     where: {
@@ -192,7 +192,7 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
     type: "password_reset",
     expiresAt: fifteenMinsFromNow(),
   });
-  const url = `${process.env.APP_ORIGIN}/password-reset?token=${value}`;
+  const url = `${process.env.APP_ORIGIN}/reset-password?token=${value}`;
   await sendAuthMail({
     to: email,
     subject: "Password reset",
