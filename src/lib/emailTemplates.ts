@@ -24,7 +24,7 @@ export const EMAIL_VERIFICATION_TEMPLATE = `
           src="https://example.com/placeholder.svg"
           width="96"
           height="96"
-          alt="Acme Inc"
+          alt="Auth Inc"
           style="border-radius: 8px; object-fit: cover;"
         />
         <h1
@@ -47,7 +47,7 @@ export const EMAIL_VERIFICATION_TEMPLATE = `
         <p>Hello,</p>
         <p>
           We received a request to verify this email address. If you didn’t make
-          this request, please ignore this email.
+          this request, please ignore or delete this email.
         </p>
         <p>Click the button below to verify your email address:</p>
         <a
@@ -120,7 +120,7 @@ export const PASSWORD_RESET_TEMPLATE = `
           src="https://example.com/placeholder.svg"
           width="96"
           height="96"
-          alt="Acme Inc"
+          alt="Auth Inc"
           style="border-radius: 8px; object-fit: cover;"
         />
         <h1
@@ -144,7 +144,7 @@ export const PASSWORD_RESET_TEMPLATE = `
         <p>Hello,</p>
         <p>
           We received a request to reset your password. If you didn’t make this
-          request, please ignore this email.
+          request, please ignore or delete this email.
         </p>
         <p>Click the button below to reset your password:</p>
         <a
@@ -165,7 +165,7 @@ export const PASSWORD_RESET_TEMPLATE = `
         <p>This link will expire in 15 minutes for security reasons.</p>
         <p>
           Best regards,<br />
-          Scrib Team
+          Auth Team
         </p>
       </div>
 

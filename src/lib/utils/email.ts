@@ -9,12 +9,11 @@ interface Params {
   to: string;
   subject: string;
   template: string;
-  value: string;
+  url: string;
 }
 
-const sendMail = async ({ to, subject, template, value }: Params) => {
+export const sendAuthMail = async ({ to, subject, template, url }: Params) => {
   try {
-    const url = `${process.env.APP_ORIGIN}/auth/verify-email?token=${value}`;
     const { data, error } = await resend.emails.send({
       from: env.EMAIL_FROM,
       to: to.toLowerCase().trim(),
@@ -34,5 +33,3 @@ const sendMail = async ({ to, subject, template, value }: Params) => {
     });
   }
 };
-
-export default sendMail;

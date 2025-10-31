@@ -34,7 +34,7 @@ import {
   setAuthCookies,
 } from "../lib/utils/cookies.js";
 import env from "../lib/utils/env.js";
-import sendMail from "../lib/utils/sendMail.js";
+import { sendAuthMail } from "../lib/utils/email.js";
 import {
   AccessTokenPayload,
   RefreshTokenPayload,
@@ -56,7 +56,7 @@ const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 export const signupHandler = catchAsyncErrors(async (req, res) => {
   const { email, name, password } = signupSchema.parse(req.body);
   const existingUser = await User.findOne({ where: { email } });
-  appAssert(existingUser, CONFLICT, "A user with this email already exists");
+  appAssert(!existingUser, CONFLICT, "A user with this email already exists");
 
   await sequelize.transaction(async (t) => {
     const { id } = await User.create({ name, email }, { transaction: t });
@@ -72,11 +72,12 @@ export const signupHandler = catchAsyncErrors(async (req, res) => {
       },
       { transaction: t }
     );
-    await sendMail({
+    const url = `${process.env.APP_ORIGIN}/verify-email?token=${value}`;
+    await sendAuthMail({
       to: email,
       subject: "Email verification",
       template: EMAIL_VERIFICATION_TEMPLATE,
-      value,
+      url,
     });
   });
 
@@ -108,7 +109,7 @@ export const verifyEmailHandler = catchAsyncErrors(async (req, res) => {
     );
     await User.update(
       { emailVerified: true },
-      { where: { id }, transaction: t }
+      { where: { id: userId }, transaction: t }
     );
 
     await record.destroy({ transaction: t });
@@ -190,12 +191,12 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
     type: "password_reset",
     expiresAt: fifteenMinsFromNow(),
   });
-
-  await sendMail({
+  const url = `${process.env.APP_ORIGIN}/password-reset?token=${value}`;
+  await sendAuthMail({
     to: email,
     subject: "Password reset",
     template: PASSWORD_RESET_TEMPLATE,
-    value,
+    url,
   });
 
   return res.status(CREATED).json({

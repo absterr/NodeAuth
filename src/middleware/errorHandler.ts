@@ -7,19 +7,15 @@ import { clearAuthCookies } from "../lib/utils/cookies.js";
 const REFRESH_PATH = "/auth/refresh";
 
 const handleZodError = (res: Response, error: z.ZodError) => {
-  const errors = error.issues.map((err) => ({
-    path: err.path.join,
-  }));
-
   res.status(BAD_REQUEST).json({
-    errors,
+    success: false,
     message: error.message,
   });
 };
 
 const handleAppError = (res: Response, error: AppError) => {
   res.status(error.statusCode).json({
-    error: error.errorCode,
+    success: false,
     message: error.message,
   });
 };
