@@ -10,6 +10,9 @@ const defaults: CookieOptions = {
   secure,
 };
 
+// * THE "logged_in" COOKIE IS MEANT FOR OPTIMISTIC REDIRECTION
+// * IT IS USELESS FOR ANYTHING ELSE
+
 export const setAuthCookies = ({
   res,
   accessToken,
@@ -28,6 +31,12 @@ export const setAuthCookies = ({
       ...defaults,
       path: REFRESH_PATH,
       expires: twoWeeksFromNow(),
+    })
+    .cookie("logged_in", true, {
+      secure,
+      sameSite: "lax",
+      httpOnly: false,
+      expires: fifteenMinsFromNow(),
     });
 };
 
@@ -50,6 +59,12 @@ export const refreshAuthCookies = ({
         ...defaults,
         path: REFRESH_PATH,
         expires: twoWeeksFromNow(),
+      })
+      .cookie("logged_in", true, {
+        secure,
+        sameSite: "lax",
+        httpOnly: false,
+        expires: fifteenMinsFromNow(),
       });
   }
 
@@ -62,5 +77,6 @@ export const refreshAuthCookies = ({
 export const clearAuthCookies = (res: Response) => {
   return res
     .clearCookie("accessToken")
-    .clearCookie("refreshToken", { path: REFRESH_PATH });
+    .clearCookie("refreshToken", { path: REFRESH_PATH })
+    .clearCookie("logged_in");
 };

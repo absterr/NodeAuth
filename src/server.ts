@@ -1,11 +1,12 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Request, Response } from "express";
+import authRoutes from "./auth/auth.route.js";
 import { connectToDatabase } from "./db/db.js";
 import { OK } from "./lib/httpStatusCode.js";
 import env from "./lib/utils/env.js";
 import errorHander from "./middleware/errorHandler.js";
-import authRoutes from "./auth/auth.route.js";
+import authHandler from "./middleware/authHandler.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -21,7 +22,14 @@ app.use(
 );
 
 app.get("/test", (req: Request, res: Response) => {
-  res.status(OK).send("Hello world");
+  return res.status(OK).send("Hello world");
+});
+
+app.get("/session", authHandler, (req: Request, res: Response) => {
+  return res.status(OK).json({
+    success: true,
+    message: "Valid session",
+  });
 });
 
 app.use("/auth", authRoutes);

@@ -287,6 +287,7 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   });
 
   refreshAuthCookies({ res, newRefreshToken, newAccessToken }).status(OK).json({
+    success: true,
     message: "Refreshed token",
   });
 });
