@@ -1,7 +1,7 @@
-import { Resend } from "resend";
 import { response } from "express";
-import env from "./env.js";
+import { Resend } from "resend";
 import { INTERNAL_SERVER_ERROR } from "../httpStatusCode.js";
+import env from "./env.js";
 
 const resend = new Resend(env.RESEND_API_KEY);
 

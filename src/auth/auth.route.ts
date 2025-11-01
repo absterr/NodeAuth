@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
   credentialLoginHandler,
   forgotPasswordHandler,
-  logoutHandler,
   refreshTokenHandler,
   resetPasswordHandler,
   resetPasswordTokenHandler,
@@ -19,6 +18,5 @@ authRoutes.post("/password/forgot", forgotPasswordHandler);
 authRoutes.get("/password/reset", resetPasswordTokenHandler);
 authRoutes.post("/password/reset", resetPasswordHandler);
 authRoutes.post("/refresh", refreshTokenHandler);
-authRoutes.get("/logout", logoutHandler);
 
 export default authRoutes;

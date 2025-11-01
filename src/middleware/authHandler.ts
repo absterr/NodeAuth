@@ -1,13 +1,13 @@
 import { RequestHandler } from "express";
-import appAssert from "../lib/utils/appAssert.js";
 import { UNAUTHORIZED } from "../lib/httpStatusCode.js";
-import { AccessTokenPayload, verifyUserToken } from "../lib/utils/userToken.js";
+import appAssert from "../lib/utils/appAssert.js";
 import env from "../lib/utils/env.js";
+import { AccessTokenPayload, verifyUserToken } from "../lib/utils/userToken.js";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 
 const authHandler: RequestHandler = (req, res, next) => {
-  const accessToken = req.cookies.access as string | undefined;
+  const accessToken = req.cookies.accessToken as string | undefined;
   appAssert(accessToken, UNAUTHORIZED, "Invalid access token");
 
   const { error, payload } = verifyUserToken<AccessTokenPayload>({

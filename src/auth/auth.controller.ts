@@ -27,16 +27,16 @@ import {
   TOO_MANY_REQUEST,
   UNAUTHORIZED,
 } from "../lib/httpStatusCode.js";
+import appAssert from "../lib/utils/appAssert.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
 import {
   clearAuthCookies,
   refreshAuthCookies,
   setAuthCookies,
 } from "../lib/utils/cookies.js";
-import env from "../lib/utils/env.js";
 import { sendAuthMail } from "../lib/utils/email.js";
+import env from "../lib/utils/env.js";
 import {
-  AccessTokenPayload,
   RefreshTokenPayload,
   signUserToken,
   verifyUserToken,
@@ -49,7 +49,6 @@ import {
   tokenSchema,
   verifyEmailSchema,
 } from "./auth.schema.js";
-import appAssert from "../lib/utils/appAssert.js";
 
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
@@ -289,22 +288,5 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
   refreshAuthCookies({ res, newRefreshToken, newAccessToken }).status(OK).json({
     success: true,
     message: "Refreshed token",
-  });
-});
-
-export const logoutHandler = catchAsyncErrors(async (req, res) => {
-  const accessToken = req.cookies.accessToken as string | undefined;
-  appAssert(accessToken, UNAUTHORIZED, "Invalid access token");
-
-  const { payload } = verifyUserToken<AccessTokenPayload>({
-    token: accessToken,
-    secret: ACCESS_SECRET,
-  });
-  appAssert(payload, UNAUTHORIZED, "Invalid access token");
-
-  await Session.destroy({ where: { id: payload.sessionId } });
-  clearAuthCookies(res).status(OK).json({
-    success: true,
-    message: "Logout successful",
   });
 });

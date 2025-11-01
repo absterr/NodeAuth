@@ -5,8 +5,9 @@ import authRoutes from "./auth/auth.route.js";
 import { connectToDatabase } from "./db/db.js";
 import { OK } from "./lib/httpStatusCode.js";
 import env from "./lib/utils/env.js";
-import errorHander from "./middleware/errorHandler.js";
+import mainRoutes from "./main/main.route.js";
 import authHandler from "./middleware/authHandler.js";
+import errorHander from "./middleware/errorHandler.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -33,6 +34,8 @@ app.get("/session", authHandler, (req: Request, res: Response) => {
 });
 
 app.use("/auth", authRoutes);
+
+app.use(authHandler, mainRoutes);
 
 app.use(errorHander);
 
