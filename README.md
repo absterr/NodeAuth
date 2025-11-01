@@ -63,6 +63,9 @@ src/
 │   ├── auth.route.ts         # Route definitions
 │   ├── auth.controller.ts    # Route handlers
 │   └── auth.schema.ts        # Zod schemas
+├── main/
+│   ├── main.route.ts
+│   └── main.controller.ts
 ├── db/
 │   ├── db.ts                 # Sequelize config
 │   ├── sync.ts               # DB sync script
@@ -112,14 +115,14 @@ src/
    - Uses refreshToken cookie
    - Response: 200 and sets new accessToken (and possibly refreshToken).
 
-5. **Logout:** `GET /auth/logout`
-
-   - Deletes session and clears cookies.
-
-6. **Password Reset Flow:**
+5. **Password Reset Flow:**
 
    - `POST /auth/password/forgot` → sends reset link
    - `POST /auth/password/reset?token=...` → resets password, destroys sessions
+
+6. **Logout:** `POSt /logout`
+
+   - Deletes session and clears cookies.
 
 ---
 
@@ -129,6 +132,8 @@ src/
 - **refreshToken:** JWT `{ sessionId }`, expires in 14 days.
 - Stored in `HttpOnly`, `SameSite=Strict` cookies.
 - `refreshToken` cookie scoped to `/auth/refresh`.
+- **logged_in:** expires in 15 min.
+- Stored in `SameSite=lax` cookies, only used for redirects.
 - Tokens are only valid if session exists in DB.
 
 ---
@@ -143,7 +148,8 @@ src/
 | POST   | `/auth/password/forgot` | Send password reset email  |
 | POST   | `/auth/password/reset`  | Reset password using token |
 | POST   | `/auth/refresh`         | Refresh access token       |
-| GET    | `/auth/logout`          | Logout and clear session   |
+| GET    | `/`                     | Fetch user details         |
+| POST   | `/logout`               | Logout and clear session   |
 
 ---
 
@@ -167,6 +173,5 @@ src/
 
 - Add OAuth support for Google, GitHub, etc.
 - Rate limiting and brute-force protection
-- Session history view and device management
 
 ---
