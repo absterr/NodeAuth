@@ -14,9 +14,38 @@ Run it locally with `npm install`, `npm run push`, and `npm run dev`. Environmen
 
 ---
 
-# NodeAuth
+## 📚 Table of Contents
 
-NodeAuth is a Node.js/Express authentication service written in TypeScript. It uses PostgreSQL (via Sequelize) for user/session data and JSON Web Tokens (JWT) stored in cookies for authentication. Unlike a purely stateless JWT system, NodeAuth tracks user sessions in the database _and_ signs each token with a session ID. This “hybrid” approach combines fast JWT validation with server-side session control – access tokens are short-lived (15 min) and must be refreshed using a valid session.
+1. [TL:DR](#tldr)
+2. [Table of Contents](#-table-of-contents)
+3. [NodeAuth](#nodeauth)
+4. [Installation and Setup](#️-installation-and-setup)
+5. [File Structure](#file-structure)
+6. [Authentication Flow & Sessions](#authentication-flow--sessions)
+7. [Session & Cookies](#session--cookies)
+8. [Routes Summary](#routes-summary)
+9. [Middleware](#middleware)
+10. [Error Handling](#error-handling)
+11. [Future work](#future-work)
+
+---
+
+## NodeAuth
+
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript Badge"/>
+  <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white" alt="Node.js Badge"/>
+  <img src="https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white" alt="Express Badge"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL Badge"/>
+  <img src="https://img.shields.io/badge/Sequelize-52B0E7?logo=sequelize&logoColor=white" alt="Sequelize Badge"/>
+  <img src="https://img.shields.io/badge/TSX-3178C6?logo=react&logoColor=white" alt="TSX Badge"/>
+  <img src="https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white" alt="JWT Badge"/>
+  <img src="https://img.shields.io/badge/Zod-3066BE?logo=zod&logoColor=white" alt="Zod Badge"/>
+  <img src="https://img.shields.io/badge/Resend-FF6A00?logo=maildotru&logoColor=white" alt="Resend Badge"/>
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License"/>
+</p>
+
+**NodeAuth** is a Node.js/Express authentication service written in TypeScript. It uses PostgreSQL (via Sequelize) for user/session data and JSON Web Tokens (JWT) stored in cookies for authentication. Unlike a purely stateless JWT system, NodeAuth tracks user sessions in the database _and_ signs each token with a session ID. This “hybrid” approach combines fast JWT validation with server-side session control – access tokens are short-lived (15 min) and must be refreshed using a valid session.
 
 ## Installation
 
