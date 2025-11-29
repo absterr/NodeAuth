@@ -22,6 +22,7 @@ import {
   BAD_REQUEST,
   CONFLICT,
   CREATED,
+  INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   OK,
   TOO_MANY_REQUEST,
@@ -53,7 +54,7 @@ import {
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 
-export const signupHandler = catchAsyncErrors(async (req, res) => {
+export const credentialSignupHandler = catchAsyncErrors(async (req, res) => {
   const { email, name, password } = signupSchema.parse(req.body);
   const existingUser = await User.findOne({ where: { email } });
   appAssert(!existingUser, CONFLICT, "A user with this email already exists");
@@ -206,7 +207,7 @@ export const forgotPasswordHandler = catchAsyncErrors(async (req, res) => {
 });
 
 export const resetPasswordTokenHandler = catchAsyncErrors(async (req, res) => {
-  const { token } = await tokenSchema.parse({
+  const { token } = tokenSchema.parse({
     token: req.query.token,
   });
 
@@ -222,7 +223,7 @@ export const resetPasswordTokenHandler = catchAsyncErrors(async (req, res) => {
 });
 
 export const resetPasswordHandler = catchAsyncErrors(async (req, res) => {
-  const { password, token } = await resetPasswordSchema.parse({
+  const { password, token } = resetPasswordSchema.parse({
     ...req.body,
     token: req.query.token,
   });
@@ -289,4 +290,31 @@ export const refreshTokenHandler = catchAsyncErrors(async (req, res) => {
     success: true,
     message: "Refreshed token",
   });
+});
+
+// GOOGLE OAUTH HANDLER
+export const googleSigninHandler = catchAsyncErrors(async (req, res) => {
+  const user = req.user;
+  const userAgent = req.headers["user-agent"];
+  appAssert(user, INTERNAL_SERVER_ERROR, "User not provided");
+
+  const { id, userId } = await Session.create({
+    userId: user.id,
+    userAgent,
+    expiresAt: twoWeeksFromNow(),
+  });
+
+  const accessToken = signUserToken({
+    payload: { userId: userId, sessionId: id },
+    options: { expiresIn: "15m" },
+    secret: ACCESS_SECRET,
+  });
+  const refreshToken = signUserToken({
+    payload: { sessionId: id },
+    options: { expiresIn: "14d" },
+    secret: REFRESH_SECRET,
+  });
+
+  setAuthCookies({ res, accessToken, refreshToken })
+    .status(CREATED).redirect(`${env.APP_ORIGIN}`);
 });

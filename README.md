@@ -126,31 +126,25 @@ src/
 ## Authentication Flow & Sessions
 
 1. **Signup:** `POST /auth/signup`
-
    - Body: `{ email, name, password }`
    - Response: 201 with email verification link sent.
 
 2. **Verify Email:** `POST /auth/email/verify?token=...`
-
    - Response: 201 and sets accessToken + refreshToken cookies.
 
 3. **Login:** `POST /auth/login`
-
    - Body: `{ email, password }`
    - Response: 201 and sets cookies.
 
 4. **Token Refresh:** `POST /auth/refresh`
-
    - Uses refreshToken cookie
    - Response: 200 and sets new accessToken (and possibly refreshToken).
 
 5. **Password Reset Flow:**
-
    - `POST /auth/password/forgot` → sends reset link
    - `POST /auth/password/reset?token=...` → resets password, destroys sessions
 
 6. **Logout:** `POSt /logout`
-
    - Deletes session and clears cookies.
 
 ---
@@ -200,7 +194,6 @@ src/
 
 ## Future Work
 
-- Add OAuth support for Google, GitHub, etc.
 - Rate limiting and brute-force protection
 
 ---

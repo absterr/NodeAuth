@@ -1,6 +1,5 @@
 import { Session } from "../db/models/session.model.js";
-import { User } from "../db/models/user.model.js";
-import { NOT_FOUND, OK, UNAUTHORIZED } from "../lib/httpStatusCode.js";
+import { OK, UNAUTHORIZED } from "../lib/httpStatusCode.js";
 import appAssert from "../lib/utils/appAssert.js";
 import catchAsyncErrors from "../lib/utils/catchAsyncErrors.js";
 import { clearAuthCookies } from "../lib/utils/cookies.js";
@@ -10,13 +9,8 @@ import { AccessTokenPayload, verifyUserToken } from "../lib/utils/userToken.js";
 const ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 
 export const getUserDetailsHandler = catchAsyncErrors(async (req, res) => {
-  const userId = req.userId;
-  appAssert(userId, UNAUTHORIZED, "Invalid token");
-
-  const user = await User.findByPk(userId, {
-    attributes: ["name", "email"],
-  });
-  appAssert(user, NOT_FOUND, "User not found");
+  const user = req.user
+  appAssert(user, UNAUTHORIZED, "Invalid token");
 
   return res.status(OK).json({
     success: true,
